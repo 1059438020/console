@@ -19,7 +19,7 @@ public class CmdSocketCommon extends Thread {
     public CmdSocketCommon(Integer port) throws IOException
     {
         serverSocket = new ServerSocket(port);
-        serverSocket.setSoTimeout(20000);
+        serverSocket.setSoTimeout(30000);
     }
 
     @Override
