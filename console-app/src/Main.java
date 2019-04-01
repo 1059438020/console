@@ -17,7 +17,6 @@ public class Main {
             InputStream inFromServer = client.getInputStream();
             DataInputStream in = new DataInputStream(inFromServer);
             System.out.println("服务器响应： " + in.readUTF());
-            Runtime.getRuntime().exec("cmd /c start http://www.baidu.com/");
             Runtime.getRuntime().exec("cmd /c notepad");
             client.close();
         }catch(IOException e)
