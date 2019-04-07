@@ -64,7 +64,6 @@ public class GuardSocket implements InitializingBean, DisposableBean {
                 }
             }
         }
-        //流传递command
     }
 
     private class MonitorThread extends Thread {
