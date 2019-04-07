@@ -15,17 +15,31 @@ public class Main {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            InputStream inFromServer = null;
+            DataInputStream in = null;
+
             while(true) {
                 try {
-                    InputStream inFromServer = socket.getInputStream();
-                    DataInputStream in = new DataInputStream(inFromServer);
+                    inFromServer = socket.getInputStream();
+                    in = new DataInputStream(inFromServer);
                     String str = in.readUTF();
                     if(!str.isEmpty()) {
                         WorkThread workThread = new WorkThread(str);
                         threadPool.execute(workThread);
                     }
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    try {
+                        if (inFromServer != null) {
+                            inFromServer.close();
+                        }
+                        if (in != null) {
+                            in.close();
+                        }
+                        socket.close();
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                    break;
                 }
             }
         }

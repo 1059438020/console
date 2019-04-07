@@ -4,7 +4,6 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -83,6 +82,7 @@ public class GuardSocket implements InitializingBean, DisposableBean {
                     try {
                         socket.close();
                         ipMap.remove(ip);
+                        //更新数据库状态，将该ip设置为离线状态
                         break;
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -102,7 +102,7 @@ public class GuardSocket implements InitializingBean, DisposableBean {
                 while(true) {
                     Socket socket = serverSocket.accept();
                     if(socket != null) {
-                        //向数据库中更新用户信息，并将状态设置未活跃状态
+                        //向数据库中更新ip信息，并将该ip状态设置为已连接状态
                         ipMap.put(socket.getInetAddress(), socket);
                         ListenThread listenThread = new ListenThread();
                         listenThread.setIp(socket.getInetAddress());
