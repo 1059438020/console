@@ -1,16 +1,15 @@
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Main {
+    static Socket socket = null;
     static ExecutorService threadPool = Executors.newCachedThreadPool();
     static class ListenThread extends Thread {
         @Override
         public void run() {
-            Socket socket = null;
+
             try {
                 socket = new Socket("127.0.0.1", 8888);
             } catch (IOException e) {
@@ -48,6 +47,5 @@ public class Main {
     public static void main(String[] args) {
         ListenThread listenThread = new ListenThread();
         threadPool.execute(listenThread);
-
     }
 }

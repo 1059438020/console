@@ -4,6 +4,7 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -66,6 +67,31 @@ public class GuardSocket implements InitializingBean, DisposableBean {
         }
     }
 
+    private class ListenThread extends Thread {
+        InetAddress ip;
+        void setIp(InetAddress ip) {
+            this.ip = ip;
+        }
+        @Override
+        public void run() {
+            if(!ipMap.containsKey(ip)) {
+                return;
+            }
+            Socket socket = ipMap.get(ip);
+            while(true) {
+                if(socket.isClosed()) {
+                    try {
+                        socket.close();
+                        ipMap.remove(ip);
+                        break;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+
     private class MonitorThread extends Thread {
         private int port;
         @Override
@@ -78,6 +104,9 @@ public class GuardSocket implements InitializingBean, DisposableBean {
                     if(socket != null) {
                         //向数据库中更新用户信息，并将状态设置未活跃状态
                         ipMap.put(socket.getInetAddress(), socket);
+                        ListenThread listenThread = new ListenThread();
+                        listenThread.setIp(socket.getInetAddress());
+                        threadPool.execute(listenThread);
                         System.out.println("链接的用户ip = "+socket.getInetAddress());
                     }
                 }
