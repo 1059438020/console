@@ -10,6 +10,7 @@ public class Main {
         @Override
         public void run() {
 
+            boolean flag = true;
             try {
                 socket = new Socket("127.0.0.1", 8888);
             } catch (IOException e) {
@@ -18,7 +19,7 @@ public class Main {
             InputStream inFromServer = null;
             DataInputStream in = null;
 
-            while(true) {
+            while(flag) {
                 try {
                     inFromServer = socket.getInputStream();
                     in = new DataInputStream(inFromServer);
@@ -28,19 +29,19 @@ public class Main {
                         threadPool.execute(workThread);
                     }
                 } catch (IOException e) {
-                    try {
-                        if (inFromServer != null) {
-                            inFromServer.close();
-                        }
-                        if (in != null) {
-                            in.close();
-                        }
-                        socket.close();
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                    }
-                    break;
+                    flag = false;
                 }
+            }
+            try {
+                if (inFromServer != null) {
+                    inFromServer.close();
+                }
+                if (in != null) {
+                    in.close();
+                }
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -60,6 +61,6 @@ public class Main {
     }
     public static void main(String[] args) {
         ListenThread listenThread = new ListenThread();
-        threadPool.execute(listenThread);
+        listenThread.run();
     }
 }
