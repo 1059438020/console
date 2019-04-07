@@ -4,9 +4,13 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -18,6 +22,7 @@ public class GuardSocket implements InitializingBean, DisposableBean {
 
     private ExecutorService threadPool;
     private ServerSocket serverSocket;
+    private Map<InetAddress, Socket> ipMap = new HashMap<>();
 
     @Override
     public void destroy() throws IOException {
@@ -32,16 +37,32 @@ public class GuardSocket implements InitializingBean, DisposableBean {
         threadPool.execute(monitorThread);
     }
 
-    public void joinPool(String command) {
+    public void joinPool(String command, InetAddress ip) {
         WorkThread workThread = new WorkThread();
         workThread.setCommand(command);
+        workThread.setIp(ip);
         threadPool.execute(workThread);
     }
 
     private class WorkThread extends Thread {
         private String command;
+        private InetAddress ip;
         void setCommand(String command) {
             this.command = command;
+        }
+        void setIp(InetAddress ip) {this.ip = ip;}
+        @Override
+        public void run() {
+            if(ipMap.containsKey(ip)) {
+                Socket socket = ipMap.get(ip);
+                DataOutputStream out;
+                try {
+                    out = new DataOutputStream(socket.getOutputStream());
+                    out.writeUTF(command);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         //流传递command
     }
@@ -57,6 +78,7 @@ public class GuardSocket implements InitializingBean, DisposableBean {
                     Socket socket = serverSocket.accept();
                     if(socket != null) {
                         //向数据库中更新用户信息，并将状态设置未活跃状态
+                        ipMap.put(socket.getInetAddress(), socket);
                         System.out.println("链接的用户ip = "+socket.getInetAddress());
                     }
                 }
